@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { DirectoryPath } = require('../index.js');
 
-const outputFilePath = path.join(__dirname, 'wifipasswords.txt');
+const outputFilePath = path.join(DirectoryPath, 'networkInformation.txt');
 const logStream = fs.createWriteStream(outputFilePath, { flags: 'a' });
 const errorStream = fs.createWriteStream(outputFilePath, { flags: 'a' });
 
@@ -15,8 +15,6 @@ console.log = function (message) {
 console.error = function (message) {
   errorStream.write(`${message}\n`);
 };
-
-console.log('Welcome to the Party');
 
 const now = new Date();
 const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
